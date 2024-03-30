@@ -11,7 +11,7 @@ class CleanNode(BaseModel):
 class CrawlerRequest(BaseModel):
     url: str
     clean: Union[CleanNode] = CleanNode()
-    longer_wait: bool = False
+    xhr: bool = False
 
 
 class CrawlerResult(BaseModel):

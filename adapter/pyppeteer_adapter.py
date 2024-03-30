@@ -61,7 +61,7 @@ class PyppeteerCrawler(BaseCrawler):
                 page.on('request', lambda req: asyncio.ensure_future(self._intercept(req)))
                 page.on("dialog", lambda x: asyncio.ensure_future(self._close_dialog(x)))
 
-                wait_util = "domcontentloaded" if not item.longer_wait else "networkidle2"
+                wait_util = "domcontentloaded" if not item.xhr else "networkidle2"
                 await page.goto(item.url, timeout=10000, waitUntil=wait_util)
 
                 title = await page.title()

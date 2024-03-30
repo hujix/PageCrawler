@@ -28,7 +28,7 @@ ENABLE_CRAWLER = [
 ]
 
 
-@app.post("/extract", response_model_exclude={'adapter'})
+@app.post("/extract")
 async def extract(item: CrawlerRequest):
     tasks = [asyncio.create_task(crawler.crawl(item)) for crawler in ENABLE_CRAWLER]
     results = await asyncio.gather(*tasks)
