@@ -46,8 +46,7 @@ class PyppeteerCrawler(BaseCrawler):
                     '--disable-web-security',
                     '--disable-popup-blocking'
                 ],
-                'ignoreDefaultArgs': ['--enable-automation'],
-                # "executablePath": r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+                'ignoreDefaultArgs': ['--enable-automation']
             })
             self._context_list.append((browser, Semaphore(self.page_count)))
 

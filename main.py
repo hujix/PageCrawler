@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from parsel import Selector
 
 from adapter import RequestCrawler, PyppeteerCrawler, PlaywrightCrawler
+from logger import logger
 from models import CrawlerRequest, CrawlerResult
 
 
@@ -28,6 +29,8 @@ app = FastAPI(lifespan=lifespan,
 core_count = multiprocessing.cpu_count()
 
 playwright_count = math.ceil(core_count * 0.8)
+
+logger.info(f"Lazy loading : playwright:{playwright_count} pyppeteer:{core_count - playwright_count}")
 
 request_crawler = RequestCrawler(timeout=5)
 pyppeteer_crawler = PyppeteerCrawler(browser_count=core_count - playwright_count)
@@ -64,6 +67,8 @@ def is_verification_page(title: str, html: str) -> bool:
 
 @app.post("/extract")
 async def extract(item: CrawlerRequest) -> CrawlerResult:
+    logger.info(f"Received new request : {item.model_dump()}")
+
     request_result = await request_crawler.crawl(item)
 
     if request_result.success and not is_verification_page(title=request_result.title, html=request_result.html):
@@ -76,4 +81,4 @@ async def extract(item: CrawlerRequest) -> CrawlerResult:
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='main:app', workers=core_count)
+    uvicorn.run(app='main:app', workers=math.ceil(core_count / 2))
