@@ -38,7 +38,7 @@ def parse_keywords(html: str) -> List[str]:
     if keywords_str is None:
         return []
 
-    return [_.strip() for _ in keywords_str.split(",")]
+    return [_.strip() for _ in keywords_str.split(",") if len(_.strip()) > 0]
 
 
 def parse_description(html: str) -> str:
