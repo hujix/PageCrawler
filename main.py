@@ -33,8 +33,8 @@ playwright_count = math.floor(core_count * 0.8)
 logger.info(f"Lazy loading : playwright:{playwright_count} pyppeteer:{core_count - playwright_count}")
 
 request_crawler = RequestCrawler(timeout=5)
-pyppeteer_crawler = PyppeteerCrawler(browser_count=core_count - playwright_count)
 playwright_crawler = PlaywrightCrawler(browser_count=playwright_count)
+pyppeteer_crawler = PyppeteerCrawler(browser_count=core_count - playwright_count)
 
 ENABLE_CRAWLER = [
     request_crawler,
@@ -81,4 +81,4 @@ async def extract(item: CrawlerRequest) -> CrawlerResult:
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='main:app', workers=math.ceil(core_count / 2))
+    uvicorn.run(app='main:app', host="0.0.0.0", port=8000)
