@@ -14,16 +14,17 @@ class PlaywrightCrawler(BaseCrawler):
     adapter = "Playwright"
 
     def __init__(self, browser_count: int = 1, page_count: int = 10, timeout: int = 5000,
-                 headless: bool = True) -> None:
+                 headless: bool = True, executable_path: Optional[str] = None) -> None:
         super().__init__()
         self._context_list: List[Tuple[Browser, BrowserContext, Semaphore]] = []
-        self._playwright: Optional[Playwright] = None
+        self.playwright: Optional[Playwright] = None
 
         self._index = 0
         self.timeout = timeout
         self.headless = headless
         self.browser_count = browser_count
         self.page_count = page_count
+        self.executable_path = executable_path
 
     async def close(self) -> None:
         if len(self._context_list) > 0:
@@ -31,13 +32,14 @@ class PlaywrightCrawler(BaseCrawler):
                 await browser.close()
                 await browser_ctx.close()
 
-        if self._playwright is not None:
-            await self._playwright.stop()
+        if self.playwright is not None:
+            await self.playwright.stop()
 
     async def create_browser(self) -> None:
-        self._playwright = await async_playwright().start()
+        self.playwright = await async_playwright().start()
         for idx in range(self.browser_count):
-            browser = await self._playwright.chromium.launch(headless=self.headless)
+            browser = await self.playwright.chromium.launch(headless=self.headless,
+                                                            executable_path=self.executable_path)
             browser_ctx = await browser.new_context(ignore_https_errors=True, bypass_csp=True)
             self._context_list.append((browser, browser_ctx, Semaphore(self.page_count)))
 

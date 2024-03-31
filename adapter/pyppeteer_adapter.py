@@ -1,7 +1,8 @@
 import asyncio
 from asyncio import Semaphore
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
+from playwright.async_api import async_playwright
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 from pyppeteer.network_manager import Request
@@ -16,7 +17,7 @@ class PyppeteerCrawler(BaseCrawler):
     adapter = "Pyppeteer"
 
     def __init__(self, browser_count: int = 1, page_count: int = 10, timeout: int = 5000,
-                 headless: bool = True) -> None:
+                 headless: bool = True, executable_path: Optional[str] = None) -> None:
         super().__init__()
         self._context_list: List[Tuple[Browser, Semaphore]] = []
         self._index = 0
@@ -25,6 +26,7 @@ class PyppeteerCrawler(BaseCrawler):
         self.headless = headless
         self.browser_count = browser_count
         self.page_count = page_count
+        self.executable_path = executable_path
 
     async def close(self):
         if len(self._context_list) > 0:
@@ -33,6 +35,12 @@ class PyppeteerCrawler(BaseCrawler):
 
     async def create_browser(self) -> None:
         await self.close()
+        if self.executable_path is None:
+            # 借助playwright的浏览器创建实例
+            playwright = await async_playwright().start()
+            self.executable_path = playwright.chromium.executable_path
+            await playwright.stop()
+            
         for idx in range(self.browser_count):
             browser = await launch(options={
                 'headless': self.headless,
@@ -46,7 +54,8 @@ class PyppeteerCrawler(BaseCrawler):
                     '--disable-web-security',
                     '--disable-popup-blocking'
                 ],
-                'ignoreDefaultArgs': ['--enable-automation']
+                'ignoreDefaultArgs': ['--enable-automation'],
+                'executablePath': self.executable_path
             })
             self._context_list.append((browser, Semaphore(self.page_count)))
 
