@@ -28,7 +28,7 @@ app = FastAPI(lifespan=lifespan,
 
 core_count = multiprocessing.cpu_count()
 
-playwright_count = math.ceil(core_count * 0.8)
+playwright_count = math.floor(core_count * 0.8)
 
 logger.info(f"Lazy loading : playwright:{playwright_count} pyppeteer:{core_count - playwright_count}")
 
