@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Semaphore
-from typing import Optional
+from typing import List, Tuple
 
 from pyppeteer import launch
 from pyppeteer.browser import Browser
@@ -15,45 +15,51 @@ from models import CrawlerResult, CrawlerRequest
 class PyppeteerCrawler(BaseCrawler):
     adapter = "Pyppeteer"
 
-    def __init__(self, page_count: int = 10) -> None:
+    def __init__(self, browser_count: int = 1, page_count: int = 10, timeout: int = 5000,
+                 headless: bool = True) -> None:
         super().__init__()
-        self.browser: Optional[Browser] = None
-        self.semaphore: Semaphore = Semaphore(page_count)
-        self.index = 0
+        self._context_list: List[Tuple[Browser, Semaphore]] = []
+        self._index = 0
 
-        self._page_count = page_count
+        self.timeout = timeout
+        self.headless = headless
+        self.browser_count = browser_count
+        self.page_count = page_count
 
     async def close(self):
-        if self.browser is not None:
-            await self.browser.close()
+        if len(self._context_list) > 0:
+            for browser, _ in self._context_list:
+                await browser.close()
 
     async def create_browser(self) -> None:
-        self.browser = await launch(options={
-            'headless': False,
-            'ignoreHTTPSErrors': True,
-            'dumpio': True,
-            'autoClose': True,
-            'userDataDir': r'C:/Users/Hu.Sir/Documents/PyCharmProjects/PageExtractor/tmp/pyppeteer',
-            "args": [
-                '--no-sandbox',
-                '--window-size=1280,720',
-                '--disable-infobars',
-                '--disable-features=TranslateUI',
-                '--disable-web-security',
-                '--disable-popup-blocking'
-            ],
-            'ignoreDefaultArgs': ['--enable-automation'],
-            'defaultViewport': {"width": 1280, "height": 720},
-            "executablePath": r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-        })
+        await self.close()
+        for idx in range(self.browser_count):
+            browser = await launch(options={
+                'headless': self.headless,
+                'ignoreHTTPSErrors': True,
+                'dumpio': True,
+                'autoClose': True,
+                "args": [
+                    '--no-sandbox',
+                    '--disable-infobars',
+                    '--disable-features=TranslateUI',
+                    '--disable-web-security',
+                    '--disable-popup-blocking'
+                ],
+                'ignoreDefaultArgs': ['--enable-automation'],
+                # "executablePath": r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+            })
+            self._context_list.append((browser, Semaphore(self.page_count)))
 
     @async_timeit
     async def crawl(self, item: CrawlerRequest) -> CrawlerResult:
-        if self.browser is None:
+        if len(self._context_list) == 0:
             await self.create_browser()
 
-        async with self.semaphore:
-            page = await self.browser.newPage()
+        browser, semaphore = self._context_list[self._index % self.browser_count]
+        self._index += 1
+        async with semaphore:
+            page = await browser.newPage()
             try:
                 await page.evaluateOnNewDocument('()=>{Object.defineProperties(navigator,{webdriver:{get:()=>false}});')
                 # 开启请求拦截
@@ -62,7 +68,7 @@ class PyppeteerCrawler(BaseCrawler):
                 page.on("dialog", lambda x: asyncio.ensure_future(self._close_dialog(x)))
 
                 wait_util = "domcontentloaded" if not item.xhr else "networkidle2"
-                await page.goto(item.url, timeout=10000, waitUntil=wait_util)
+                await page.goto(item.url, timeout=self.timeout, waitUntil=wait_util)
 
                 title = await page.title()
                 content = await page.content()
@@ -73,8 +79,6 @@ class PyppeteerCrawler(BaseCrawler):
             except ConnectionError as e:
                 if page is not None:
                     await page.close()
-                if self.browser is not None:
-                    await self.close()
 
                 await self.create_browser()
                 return await self.crawl(item)
