@@ -1,3 +1,5 @@
+import math
+import multiprocessing
 import re
 from contextlib import asynccontextmanager
 from typing import List
@@ -17,11 +19,19 @@ async def lifespan(app: FastAPI):
         await crawler.close()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan,
+              openapi_prefix="",
+              openapi_url=None,
+              docs_url=None,
+              redoc_url=None)
+
+core_count = multiprocessing.cpu_count()
+
+playwright_count = math.ceil(core_count * 0.8)
 
 request_crawler = RequestCrawler(timeout=5)
-pyppeteer_crawler = PyppeteerCrawler()
-playwright_crawler = PlaywrightCrawler()
+pyppeteer_crawler = PyppeteerCrawler(browser_count=core_count - playwright_count)
+playwright_crawler = PlaywrightCrawler(browser_count=playwright_count)
 
 ENABLE_CRAWLER = [
     request_crawler,
@@ -66,4 +76,4 @@ async def extract(item: CrawlerRequest) -> CrawlerResult:
 
 
 if __name__ == '__main__':
-    uvicorn.run(app='main:app', workers=1)
+    uvicorn.run(app='main:app', workers=core_count)
