@@ -7,7 +7,7 @@ from pyppeteer.browser import Browser
 from pyppeteer.network_manager import Request
 
 from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit, clean_html
+from adapter.utils import async_timeit, clean_html, parse_keywords, parse_description
 from logger import logger
 from models import CrawlerResult, CrawlerRequest
 
@@ -68,7 +68,8 @@ class PyppeteerCrawler(BaseCrawler):
                 content = await page.content()
                 html = clean_html(content, item.clean)
 
-                return CrawlerResult(url=item.url, title=title, html=html, adapter=self.adapter)
+                return CrawlerResult(url=item.url, title=title, keywords=parse_keywords(html), html=html,
+                                     description=parse_description(html), adapter=self.adapter)
             except ConnectionError as e:
                 if page is not None:
                     await page.close()
@@ -79,8 +80,7 @@ class PyppeteerCrawler(BaseCrawler):
                 return await self.crawl(item)
             except Exception as e:
                 logger.error(f"Crawl error with [{__name__}] adapter: {e}")
-                return CrawlerResult(url=item.url, title="", html="", success=False, reason=str(e),
-                                     adapter=self.adapter)
+                return CrawlerResult(url=item.url, success=False, reason=str(e), adapter=self.adapter)
             finally:
                 await page.close()
 

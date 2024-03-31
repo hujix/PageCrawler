@@ -3,10 +3,9 @@ from typing import Optional
 import aiohttp
 from aiohttp import ClientSession
 from fake_useragent import UserAgent
-from parsel import Selector
 
 from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit, clean_html
+from adapter.utils import async_timeit, clean_html, parse_title, parse_keywords, parse_description
 from logger import logger
 from models import CrawlerResult, CrawlerRequest
 
@@ -56,22 +55,15 @@ class RequestCrawler(BaseCrawler):
             await self._create_session()
         try:
             async with self.session.get(item.url, headers=await self._create_header(item.url)) as response:
-                if response.status != 200:
+                if response.status not in [200, 301, 302, 307, 401, 403]:
                     response.raise_for_status()
                 html = await response.text()
 
                 html = clean_html(html, item.clean)
 
-                return CrawlerResult(url=item.url, title=self._parse_title(html), html=html, adapter=self.adapter)
+                return CrawlerResult(url=item.url, title=parse_title(html), keywords=parse_keywords(html), html=html,
+                                     description=parse_description(html), adapter=self.adapter)
         except Exception as e:
             logger.error(f"Error while crawling {item.url}: {e}")
-            return CrawlerResult(url=item.url, title="", html="", success=False,
-                                 reason=f"{response.status}:{response.reason}", adapter=self.adapter)
-
-    @classmethod
-    def _parse_title(cls, html: str) -> str:
-        selector: Selector = Selector(text=html)
-        title = selector.css("title::text").get()
-        if title is None:
-            title = ""
-        return title.strip()
+            return CrawlerResult(url=item.url, success=False, reason=f"{response.status}:{response.reason}",
+                                 adapter=self.adapter)
