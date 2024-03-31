@@ -1,11 +1,13 @@
-import asyncio
+import re
 from contextlib import asynccontextmanager
+from typing import List
 
 import uvicorn
 from fastapi import FastAPI
+from parsel import Selector
 
 from adapter import RequestCrawler, PyppeteerCrawler, PlaywrightCrawler
-from models import CrawlerRequest
+from models import CrawlerRequest, CrawlerResult
 
 
 @asynccontextmanager
@@ -22,18 +24,45 @@ pyppeteer_crawler = PyppeteerCrawler()
 playwright_crawler = PlaywrightCrawler()
 
 ENABLE_CRAWLER = [
-    # request_crawler,
+    request_crawler,
     pyppeteer_crawler,
     playwright_crawler
 ]
 
+verify_keyword_list = ["验证", "verify", "robot", "captcha"]
+
+verify_regex = re.compile('/authenticate/|/security/|/captcha/|/verify/', flags=re.IGNORECASE)
+
+chinese_and_word_regex = re.compile('[\u4e00-\u9fa5]|[a-z-]+', flags=re.IGNORECASE)
+
+
+def is_verification_page(title: str, html: str) -> bool:
+    for verify in verify_keyword_list:
+        if verify in title:
+            return True
+    selector: Selector = Selector(html)
+    form_action_or_captcha_image_list: List[str] = selector.xpath('.//form/@action | .//img/@src').getall()
+    for form_action_or_captcha_image in form_action_or_captcha_image_list:
+        if verify_regex.findall(form_action_or_captcha_image):
+            return True
+
+    context = " ".join(selector.xpath('.//body//text()').getall())
+    if len(chinese_and_word_regex.findall(context)) < 100:
+        return True
+    return False
+
 
 @app.post("/extract")
-async def extract(item: CrawlerRequest):
-    tasks = [asyncio.create_task(crawler.crawl(item)) for crawler in ENABLE_CRAWLER]
-    results = await asyncio.gather(*tasks)
+async def extract(item: CrawlerRequest) -> CrawlerResult:
+    request_result = await request_crawler.crawl(item)
 
-    return results
+    if request_result.success and not is_verification_page(title=request_result.title, html=request_result.html):
+        return request_result
+
+    if item.xhr:
+        return await pyppeteer_crawler.crawl(item)
+    else:
+        return await playwright_crawler.crawl(item)
 
 
 if __name__ == '__main__':

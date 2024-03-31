@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from pydantic import BaseModel
 
@@ -16,8 +16,10 @@ class CrawlerRequest(BaseModel):
 
 class CrawlerResult(BaseModel):
     url: str
-    title: str
-    html: str
+    title: str = ""
+    keywords: List[str] = []
+    description: str = ""
+    html: str = ""
     success: bool = True
     reason: str = ""
     adapter: str
