@@ -1,5 +1,8 @@
 import re
 import time
+from typing import List
+
+from parsel import Selector
 
 from logger import logger
 from models import CleanNode
@@ -18,6 +21,34 @@ def async_timeit(func):
         return result
 
     return wrapper
+
+
+def parse_title(html: str) -> str:
+    selector: Selector = Selector(text=html)
+    title = selector.css("title::text").get()
+    if title is None:
+        title = ""
+    return title.strip()
+
+
+def parse_keywords(html: str) -> List[str]:
+    selector: Selector = Selector(text=html)
+    keywords_str = selector.xpath('.//head/meta[@name="keywords"]/@content').get()
+
+    if keywords_str is None:
+        return []
+
+    return [_.strip() for _ in keywords_str.split(",")]
+
+
+def parse_description(html: str) -> str:
+    selector: Selector = Selector(text=html)
+    description_str = selector.xpath('.//head/meta[@name="description"]/@content').get()
+
+    if description_str is None:
+        return ""
+
+    return description_str.strip()
 
 
 style_regex = re.compile(r"<style.*?>.*?</style>", flags=re.DOTALL)
