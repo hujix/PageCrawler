@@ -49,35 +49,40 @@ verify_regex = re.compile('/authenticate/|/security/|/captcha/|/verify/', flags=
 chinese_and_word_regex = re.compile('[\u4e00-\u9fa5]|[a-z-]+', flags=re.IGNORECASE)
 
 
-def is_verification_page(title: str, html: str) -> bool:
+def verify_is_available(title: str, html: str) -> bool:
+    if len(title) == 0:
+        return False
     for verify in verify_keyword_list:
         if verify in title:
-            return True
+            return False
     selector: Selector = Selector(html)
     form_action_or_captcha_image_list: List[str] = selector.xpath('.//form/@action | .//img/@src').getall()
     for form_action_or_captcha_image in form_action_or_captcha_image_list:
         if verify_regex.findall(form_action_or_captcha_image):
-            return True
+            return False
 
     context = " ".join(selector.xpath('.//body//text()').getall())
     if len(chinese_and_word_regex.findall(context)) < 100:
-        return True
-    return False
+        return False
+    return True
 
 
-@app.post("/extract")
+@app.post("/extract", response_model=CrawlerResult, response_model_exclude={"adapter"})
 async def extract(item: CrawlerRequest) -> CrawlerResult:
     logger.info(f"Received new request : {item.model_dump()}")
 
     request_result = await request_crawler.crawl(item)
 
-    if request_result.success and not is_verification_page(title=request_result.title, html=request_result.html):
+    if request_result.success and verify_is_available(title=request_result.title, html=request_result.html):
         return request_result
 
-    if item.xhr:
-        return await pyppeteer_crawler.crawl(item)
-    else:
-        return await playwright_crawler.crawl(item)
+    if not item.xhr:
+        playwright_result = await playwright_crawler.crawl(item)
+        if playwright_result.success and verify_is_available(title=playwright_result.title,
+                                                             html=playwright_result.html):
+            return playwright_result
+        item.xhr = True
+    return await pyppeteer_crawler.crawl(item)
 
 
 if __name__ == '__main__':
