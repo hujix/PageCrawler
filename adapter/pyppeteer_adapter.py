@@ -8,7 +8,7 @@ from pyppeteer.browser import Browser
 from pyppeteer.network_manager import Request
 
 from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit, clean_html, parse_keywords, parse_description
+from adapter.utils import async_timeit, clean_html, parse_meta
 from logger import logger
 from models import CrawlerResult, CrawlerRequest
 
@@ -40,7 +40,7 @@ class PyppeteerCrawler(BaseCrawler):
             playwright = await async_playwright().start()
             self.executable_path = playwright.chromium.executable_path
             await playwright.stop()
-            
+
         for idx in range(self.browser_count):
             browser = await launch(options={
                 'headless': self.headless,
@@ -82,8 +82,10 @@ class PyppeteerCrawler(BaseCrawler):
                 content = await page.content()
                 html = clean_html(content, item.clean)
 
-                return CrawlerResult(url=item.url, title=title, keywords=parse_keywords(html), html=html,
-                                     description=parse_description(html), adapter=self.adapter)
+                _, keywords, description = parse_meta(html)
+
+                return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html,
+                                     description=description, adapter=self.adapter)
             except ConnectionError as e:
                 if page is not None:
                     await page.close()

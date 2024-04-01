@@ -5,7 +5,7 @@ from typing import Optional, List, Tuple
 from playwright.async_api import async_playwright, Request, Route, Playwright, Browser, BrowserContext
 
 from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit, clean_html, parse_keywords, parse_description
+from adapter.utils import async_timeit, clean_html, parse_meta
 from logger import logger
 from models import CrawlerResult, CrawlerRequest
 
@@ -62,8 +62,9 @@ class PlaywrightCrawler(BaseCrawler):
 
                 html = clean_html(content, item.clean)
 
-                return CrawlerResult(url=item.url, title=title, keywords=parse_keywords(html), html=html,
-                                     description=parse_description(html), adapter=self.adapter)
+                _, keywords, description = parse_meta(html)
+                return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html,
+                                     description=description, adapter=self.adapter)
             except Exception as e:
                 logger.error(f"Crawl error : {e}")
                 return CrawlerResult(url=item.url, success=False, reason=str(e), adapter=self.adapter)

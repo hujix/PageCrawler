@@ -1,6 +1,6 @@
 import re
 import time
-from typing import List
+from typing import Tuple, List
 
 from parsel import Selector
 
@@ -23,32 +23,23 @@ def async_timeit(func):
     return wrapper
 
 
-def parse_title(html: str) -> str:
+def parse_meta(html: str) -> Tuple[str, List[str], str]:
     selector: Selector = Selector(text=html)
     title = selector.css("title::text").get()
     if title is None:
         title = ""
-    return title.strip()
 
-
-def parse_keywords(html: str) -> List[str]:
-    selector: Selector = Selector(text=html)
     keywords_str = selector.xpath('.//head/meta[@name="keywords"]/@content').get()
-
     if keywords_str is None:
-        return []
+        keywords = []
+    else:
+        keywords = [_.strip() for _ in keywords_str.split(",") if len(_.strip()) > 0]
 
-    return [_.strip() for _ in keywords_str.split(",") if len(_.strip()) > 0]
+    description = selector.xpath('.//head/meta[@name="description"]/@content').get()
+    if description is None:
+        description = ""
 
-
-def parse_description(html: str) -> str:
-    selector: Selector = Selector(text=html)
-    description_str = selector.xpath('.//head/meta[@name="description"]/@content').get()
-
-    if description_str is None:
-        return ""
-
-    return description_str.strip()
+    return title.strip(), keywords, description.strip()
 
 
 style_regex = re.compile(r"<style.*?>.*?</style>", flags=re.DOTALL)
