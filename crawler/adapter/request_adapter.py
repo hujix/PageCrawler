@@ -1,18 +1,17 @@
+import asyncio
 from typing import Optional
 
 import aiohttp
 from aiohttp import ClientSession
 from fake_useragent import UserAgent
 
-from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit, clean_html, parse_meta
+from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
+from crawler.models import CrawlerResult, CrawlerRequest
+from crawler.utils import async_timeit, clean_html, parse_meta
 from logger import logger
-from models import CrawlerResult, CrawlerRequest
 
 
-class RequestCrawler(BaseCrawler):
-    adapter = "Request"
-
+class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
     def __init__(self, timeout: int = 5):
         super().__init__()
         self._base_header = {
@@ -22,6 +21,11 @@ class RequestCrawler(BaseCrawler):
         }
         self.session: Optional[ClientSession] = None
         self._timeout = timeout
+
+    def __del__(self):
+        # 当对象被销毁时，确保异步关闭资源
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.close())
 
     async def close(self) -> None:
         if self.session is not None:
@@ -63,8 +67,7 @@ class RequestCrawler(BaseCrawler):
 
                 title, keywords, description = parse_meta(html)
                 return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html,
-                                     description=description, adapter=self.adapter)
+                                     description=description)
         except Exception as e:
             logger.error(f"Error while crawling {item.url}: {e}")
-            return CrawlerResult(url=item.url, success=False, reason=f"{response.status}:{response.reason}",
-                                 adapter=self.adapter)
+            return CrawlerResult(url=item.url, success=False, reason=f"{response.status}:{response.reason}")

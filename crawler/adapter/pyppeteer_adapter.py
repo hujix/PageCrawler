@@ -8,26 +8,28 @@ from pyppeteer import launch
 from pyppeteer.browser import Browser
 from pyppeteer.network_manager import Request
 
-from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit
+from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
+from crawler.models import CrawlerResult, CrawlerRequest
+from crawler.utils import async_timeit
 from logger import logger
-from models import CrawlerResult, CrawlerRequest
 
 
-class PyppeteerCrawler(BaseCrawler):
-    adapter = "Pyppeteer"
-
-    def __init__(self, browser_count: int = 1, page_count: int = 10, timeout: int = 5000,
+class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
+    def __init__(self, browser_count: int = 1, page_count: int = 2, timeout: int = 5,
                  headless: bool = True, executable_path: Optional[str] = None) -> None:
         super().__init__()
         self._context_list: List[Tuple[Browser, Semaphore]] = []
         self._index = 0
 
-        self.timeout = timeout
+        self.timeout = timeout * 1000
         self.headless = headless
         self.browser_count = browser_count
         self.page_count = page_count
         self.executable_path = executable_path
+
+    def __del__(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.close())
 
     async def close(self):
         if len(self._context_list) > 0:
@@ -81,13 +83,13 @@ class PyppeteerCrawler(BaseCrawler):
                     wait_util = "domcontentloaded" if not item.xhr else "networkidle2"
                     await page.goto(item.url, timeout=self.timeout, waitUntil=wait_util)
 
-                    return await super()._post_process_browser_result(page, self.adapter, item)
+                    return await super()._post_process_browser_result(page, item)
             except asyncio.TimeoutError as e:
                 logger.error(f"Crawl timeout with adapter: {item.url}")
-                return CrawlerResult(url=item.url, success=False, reason="timeout", adapter=self.adapter)
+                return CrawlerResult(url=item.url, success=False, reason="timeout")
             except Exception as e:
                 logger.error(f"Crawl error with adapter: {e} : {item.url}")
-                return CrawlerResult(url=item.url, success=False, reason=str(e), adapter=self.adapter)
+                return CrawlerResult(url=item.url, success=False, reason=str(e))
             finally:
                 await page.close()
 

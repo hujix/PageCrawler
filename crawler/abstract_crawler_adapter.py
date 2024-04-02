@@ -1,13 +1,19 @@
 from abc import ABC, abstractmethod
 
-from adapter.utils import clean_html, parse_meta
-from models import CrawlerResult, CrawlerRequest
+from crawler.models import CrawlerResult, CrawlerRequest
+from crawler.utils import clean_html, parse_meta
 
 
-class BaseCrawler(ABC):
+class AbstractPageCrawlerAdapter(ABC):
+
+    def __init__(self):
+        pass
 
     @abstractmethod
-    def __init__(self):
+    def __del__(self):
+        """
+        必须实现对象销毁时的资源释放
+        """
         pass
 
     @abstractmethod
@@ -32,12 +38,11 @@ class BaseCrawler(ABC):
         raise NotImplementedError
 
     @classmethod
-    async def _post_process_browser_result(cls, page, adapter: str, item: CrawlerRequest) -> CrawlerResult:
+    async def _post_process_browser_result(cls, page, item: CrawlerRequest) -> CrawlerResult:
         title = await page.title()
         html = await page.content()
 
         html = clean_html(html, item.clean)
 
         _, keywords, description = parse_meta(html)
-        return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html,
-                             description=description, adapter=adapter)
+        return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html, description=description)

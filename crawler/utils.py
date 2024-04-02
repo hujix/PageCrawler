@@ -4,8 +4,8 @@ from typing import Tuple, List
 
 from parsel import Selector
 
+from crawler.models import CleanNode
 from logger import logger
-from models import CleanNode
 
 
 def async_timeit(func):
@@ -17,7 +17,7 @@ def async_timeit(func):
         start_time = time.time()
         result = await func(*args, **kwargs)
         execution_time = time.time() - start_time
-        logger.info(f"Function [{func.__qualname__}:{args[1].url}] executed in {execution_time:.2f}s")
+        logger.info(f"CrawlerAdapter [{func.__qualname__}:{args[1].url}] executed in {execution_time:.2f}s.")
         return result
 
     return wrapper

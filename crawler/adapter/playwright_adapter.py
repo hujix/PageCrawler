@@ -5,27 +5,30 @@ from typing import Optional, List, Tuple
 import async_timeout
 from playwright.async_api import async_playwright, Request, Route, Playwright, Browser, BrowserContext
 
-from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit
+from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
+from crawler.models import CrawlerResult, CrawlerRequest
+from crawler.utils import async_timeit
 from logger import logger
-from models import CrawlerResult, CrawlerRequest
 
 
-class PlaywrightCrawler(BaseCrawler):
-    adapter = "Playwright"
-
-    def __init__(self, browser_count: int = 1, page_count: int = 10, timeout: int = 5000,
+class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
+    def __init__(self, browser_count: int = 1, page_count: int = 2, timeout: int = 5,
                  headless: bool = True, executable_path: Optional[str] = None) -> None:
         super().__init__()
         self._context_list: List[Tuple[Browser, BrowserContext, Semaphore]] = []
         self.playwright: Optional[Playwright] = None
 
         self._index = 0
-        self.timeout = timeout
+        self.timeout = timeout * 1000
         self.headless = headless
         self.browser_count = browser_count
         self.page_count = page_count
         self.executable_path = executable_path
+
+    def __del__(self):
+        # 当对象被销毁时，确保异步关闭资源
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.close())
 
     async def close(self) -> None:
         if len(self._context_list) > 0:
@@ -37,6 +40,7 @@ class PlaywrightCrawler(BaseCrawler):
             await self.playwright.stop()
 
     async def initialize(self) -> None:
+        await self.close()
         self.playwright = await async_playwright().start()
         for idx in range(self.browser_count):
             browser = await self.playwright.chromium.launch(headless=self.headless,
@@ -60,13 +64,13 @@ class PlaywrightCrawler(BaseCrawler):
                                      lambda route, request: asyncio.create_task(self._intercept(route, request)))
                     await page.goto(item.url, timeout=self.timeout, wait_until="domcontentloaded")
 
-                    return await super()._post_process_browser_result(page, self.adapter, item)
+                    return await super()._post_process_browser_result(page, item)
             except asyncio.TimeoutError as e:
                 logger.error(f"Crawl timeout with adapter: {item.url}")
-                return CrawlerResult(url=item.url, success=False, reason="timeout", adapter=self.adapter)
+                return CrawlerResult(url=item.url, success=False, reason="timeout")
             except Exception as e:
                 logger.error(f"Crawl error with adapter: {e} : {item.url}")
-                return CrawlerResult(url=item.url, success=False, reason=str(e), adapter=self.adapter)
+                return CrawlerResult(url=item.url, success=False, reason=str(e))
             finally:
                 await page.close()
 
