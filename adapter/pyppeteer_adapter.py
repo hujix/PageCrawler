@@ -2,13 +2,14 @@ import asyncio
 from asyncio import Semaphore
 from typing import List, Tuple, Optional
 
+import async_timeout
 from playwright.async_api import async_playwright
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 from pyppeteer.network_manager import Request
 
 from adapter.base_adapter import BaseCrawler
-from adapter.utils import async_timeit, clean_html, parse_meta
+from adapter.utils import async_timeit
 from logger import logger
 from models import CrawlerResult, CrawlerRequest
 
@@ -33,7 +34,7 @@ class PyppeteerCrawler(BaseCrawler):
             for browser, _ in self._context_list:
                 await browser.close()
 
-    async def create_browser(self) -> None:
+    async def initialize(self) -> None:
         await self.close()
         if self.executable_path is None:
             # 借助playwright的浏览器创建实例
@@ -62,38 +63,30 @@ class PyppeteerCrawler(BaseCrawler):
     @async_timeit
     async def crawl(self, item: CrawlerRequest) -> CrawlerResult:
         if len(self._context_list) == 0:
-            await self.create_browser()
+            await self.initialize()
 
         browser, semaphore = self._context_list[self._index % self.browser_count]
         self._index += 1
         async with semaphore:
             page = await browser.newPage()
             try:
-                await page.evaluateOnNewDocument('()=>{Object.defineProperties(navigator,{webdriver:{get:()=>false}});')
-                # 开启请求拦截
-                await page.setRequestInterception(True)
-                page.on('request', lambda req: asyncio.ensure_future(self._intercept(req)))
-                page.on("dialog", lambda x: asyncio.ensure_future(self._close_dialog(x)))
+                async with async_timeout.timeout(self.timeout):
+                    await page.evaluateOnNewDocument(
+                        '()=>{Object.defineProperties(navigator,{webdriver:{get:()=>false}});')
+                    # 开启请求拦截
+                    await page.setRequestInterception(True)
+                    page.on('request', lambda req: asyncio.ensure_future(self._intercept(req)))
+                    page.on("dialog", lambda x: asyncio.ensure_future(self._close_dialog(x)))
 
-                wait_util = "domcontentloaded" if not item.xhr else "networkidle2"
-                await page.goto(item.url, timeout=self.timeout, waitUntil=wait_util)
+                    wait_util = "domcontentloaded" if not item.xhr else "networkidle2"
+                    await page.goto(item.url, timeout=self.timeout, waitUntil=wait_util)
 
-                title = await page.title()
-                content = await page.content()
-                html = clean_html(content, item.clean)
-
-                _, keywords, description = parse_meta(html)
-
-                return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html,
-                                     description=description, adapter=self.adapter)
-            except ConnectionError as e:
-                if page is not None:
-                    await page.close()
-
-                await self.create_browser()
-                return await self.crawl(item)
+                    return await super()._post_process_browser_result(page, self.adapter, item)
+            except asyncio.TimeoutError as e:
+                logger.error(f"Crawl timeout with adapter: {item.url}")
+                return CrawlerResult(url=item.url, success=False, reason="timeout", adapter=self.adapter)
             except Exception as e:
-                logger.error(f"Crawl error with [{__name__}] adapter: {e}")
+                logger.error(f"Crawl error with adapter: {e} : {item.url}")
                 return CrawlerResult(url=item.url, success=False, reason=str(e), adapter=self.adapter)
             finally:
                 await page.close()

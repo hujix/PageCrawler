@@ -27,7 +27,7 @@ class RequestCrawler(BaseCrawler):
         if self.session is not None:
             await self.session.close()
 
-    async def _create_session(self) -> None:
+    async def initialize(self) -> None:
         connector = aiohttp.TCPConnector(verify_ssl=False)
         client_timeout = aiohttp.ClientTimeout(total=self._timeout)
         self.session = aiohttp.ClientSession(timeout=client_timeout, connector=connector)
@@ -52,7 +52,7 @@ class RequestCrawler(BaseCrawler):
     @async_timeit
     async def crawl(self, item: CrawlerRequest) -> CrawlerResult:
         if self.session is None:
-            await self._create_session()
+            await self.initialize()
         try:
             async with self.session.get(item.url, headers=await self._create_header(item.url)) as response:
                 if response.status not in [200, 301, 302, 307, 401, 403]:
