@@ -71,18 +71,15 @@ def verify_is_available(title: str, html: str) -> bool:
 async def extract(item: CrawlerRequest) -> CrawlerResult:
     logger.info(f"Received new request : {item.model_dump()}")
 
+    if item.xhr:
+        return await pyppeteer_crawler.crawl(item)
+
     request_result = await request_crawler.crawl(item)
 
     if request_result.success and verify_is_available(title=request_result.title, html=request_result.html):
         return request_result
 
-    if not item.xhr:
-        playwright_result = await playwright_crawler.crawl(item)
-        if playwright_result.success and verify_is_available(title=playwright_result.title,
-                                                             html=playwright_result.html):
-            return playwright_result
-        item.xhr = True
-    return await pyppeteer_crawler.crawl(item)
+    return await playwright_crawler.crawl(item)
 
 
 if __name__ == '__main__':
