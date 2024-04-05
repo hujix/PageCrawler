@@ -27,10 +27,6 @@ class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
         self.page_count = page_count
         self.executable_path = executable_path
 
-    def __del__(self):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.close())
-
     async def close(self):
         if len(self._context_list) > 0:
             for browser, _ in self._context_list:

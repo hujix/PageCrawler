@@ -10,13 +10,6 @@ class AbstractPageCrawlerAdapter(ABC):
         pass
 
     @abstractmethod
-    def __del__(self):
-        """
-        必须实现对象销毁时的资源释放
-        """
-        pass
-
-    @abstractmethod
     async def crawl(self, item: CrawlerRequest) -> CrawlerResult:
         """
         爬取网页内容

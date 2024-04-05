@@ -10,10 +10,6 @@ class CrawlerAdapter(Enum):
     playwright: str = "playwright"
 
 
-class CrawlerExecutorConfig(BaseModel):
-    pass
-
-
 class CleanNode(BaseModel):
     style: bool = True
     script: bool = False

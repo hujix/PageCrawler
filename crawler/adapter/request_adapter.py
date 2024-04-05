@@ -1,4 +1,3 @@
-import asyncio
 from typing import Optional
 
 import aiohttp
@@ -21,11 +20,6 @@ class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
         }
         self.session: Optional[ClientSession] = None
         self._timeout = timeout
-
-    def __del__(self):
-        # 当对象被销毁时，确保异步关闭资源
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.close())
 
     async def close(self) -> None:
         if self.session is not None:

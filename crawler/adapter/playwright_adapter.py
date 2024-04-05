@@ -25,11 +25,6 @@ class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
         self.page_count = page_count
         self.executable_path = executable_path
 
-    def __del__(self):
-        # 当对象被销毁时，确保异步关闭资源
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.close())
-
     async def close(self) -> None:
         if len(self._context_list) > 0:
             for browser, browser_ctx, _ in self._context_list:
