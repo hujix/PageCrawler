@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import aiohttp
 from aiohttp import ClientSession
 from fake_useragent import UserAgent
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
-from crawler.models import CrawlerResult, CrawlerRequest
-from crawler.utils import async_timeit, clean_html, parse_meta
+from crawler.models import CrawlerRequest
+from crawler.utils import async_timeit
 from logger import logger
 
 
@@ -26,9 +26,10 @@ class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
             await self.session.close()
 
     async def initialize(self) -> None:
-        connector = aiohttp.TCPConnector(verify_ssl=False)
-        client_timeout = aiohttp.ClientTimeout(total=self._timeout)
-        self.session = aiohttp.ClientSession(timeout=client_timeout, connector=connector)
+        if self.session is None:
+            connector = aiohttp.TCPConnector(verify_ssl=False)
+            client_timeout = aiohttp.ClientTimeout(total=self._timeout)
+            self.session = aiohttp.ClientSession(timeout=client_timeout, connector=connector)
 
     async def _create_header(self, url: str) -> dict:
         # parsed_url = urlparse(url)
@@ -48,20 +49,13 @@ class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
         return current_header
 
     @async_timeit
-    async def crawl(self, item: CrawlerRequest) -> CrawlerResult:
-        if self.session is None:
-            await self.initialize()
+    async def _crawler(self, item: CrawlerRequest) -> Tuple[Optional[str], Optional[str]]:
         try:
             async with self.session.get(item.url, headers=await self._create_header(item.url)) as response:
                 if response.status not in [200, 301, 302, 307, 401, 403]:
                     response.raise_for_status()
                 html = await response.text()
-
-                html = clean_html(html, item.clean)
-
-                title, keywords, description = parse_meta(html)
-                return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html,
-                                     description=description)
+                return html, None
         except Exception as e:
             logger.error(f"Error while crawling {item.url}: {e}")
-            return CrawlerResult(url=item.url, success=False, reason=f"{response.status}:{response.reason}")
+            return None, str(e)

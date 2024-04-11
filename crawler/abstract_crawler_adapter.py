@@ -1,20 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Tuple, Optional
 
-from crawler.models import CrawlerResult, CrawlerRequest
-from crawler.utils import clean_html, parse_meta
+from crawler.models import CrawlerResult, CrawlerRequest, CrawlerAdapter
+from crawler.utils import parse_meta
 
 
 class AbstractPageCrawlerAdapter(ABC):
 
     def __init__(self):
         pass
-
-    @abstractmethod
-    async def crawl(self, item: CrawlerRequest) -> CrawlerResult:
-        """
-        爬取网页内容
-        """
-        raise NotImplementedError
 
     @abstractmethod
     async def initialize(self) -> None:
@@ -30,12 +24,26 @@ class AbstractPageCrawlerAdapter(ABC):
         """
         raise NotImplementedError
 
-    @classmethod
-    async def _post_process_browser_result(cls, page, item: CrawlerRequest) -> CrawlerResult:
-        title = await page.title()
-        html = await page.content()
+    @abstractmethod
+    async def _crawler(self, item: CrawlerRequest) -> Tuple[Optional[str], Optional[str]]:
+        """
+        爬取网页内容
+        """
+        raise NotImplementedError
 
-        html = clean_html(html, item.clean)
+    async def crawl(self, adapter: CrawlerAdapter, item: CrawlerRequest) -> CrawlerResult:
+        """
+        爬取网页内容
+        """
+        await self.initialize()
+        html, reason = await self._crawler(item)
 
-        _, keywords, description = parse_meta(html)
-        return CrawlerResult(url=item.url, title=title, keywords=keywords, html=html, description=description)
+        title, keywords, description = "", [], ""
+        if html is not None:
+            title, keywords, description = parse_meta(html)
+
+        return CrawlerResult(url=item.url, title=title, keywords=keywords,
+                             html="" if html is None else html,
+                             reason="" if reason is None else reason,
+                             success=True if reason is not None else False,
+                             description=description, adapter=adapter.value.title())
