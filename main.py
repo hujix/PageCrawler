@@ -1,45 +1,19 @@
 import math
 import multiprocessing
-import re
-from typing import List
+import time
 
 import uvicorn
 from fastapi import FastAPI
-from parsel import Selector
 
 from crawler import CrawlerExecutor
-from crawler.models import CrawlerResult, CrawlerRequest, CrawlerAdapter
+from crawler.models import CrawlerRequest, CrawlerAdapter, CrawlerResult
 from logger import logger
+from models import ResponseData
 
 app = FastAPI(openapi_prefix="",
               openapi_url=None,
               docs_url=None,
               redoc_url=None)
-
-verify_keyword_list = ["验证", "verify", "robot", "captcha"]
-
-verify_regex = re.compile('/authenticate/|/security/|/captcha/|/verify/', flags=re.IGNORECASE)
-
-chinese_and_word_regex = re.compile('[\u4e00-\u9fa5]|[a-z-]+', flags=re.IGNORECASE)
-
-
-def verify_is_available(title: str, html: str) -> bool:
-    if len(title) == 0:
-        return False
-    for verify in verify_keyword_list:
-        if verify in title:
-            return False
-    selector: Selector = Selector(html)
-    form_action_or_captcha_image_list: List[str] = selector.xpath('.//form/@action | .//img/@src').getall()
-    for form_action_or_captcha_image in form_action_or_captcha_image_list:
-        if verify_regex.findall(form_action_or_captcha_image):
-            return False
-
-    context = " ".join(selector.xpath('.//body//text()').getall())
-    if len(chinese_and_word_regex.findall(context)) < 100:
-        return False
-    return True
-
 
 core_count = multiprocessing.cpu_count()
 
@@ -50,19 +24,21 @@ logger.info(f"Lazy loading : playwright:{playwright_count} pyppeteer:{core_count
 crawler_executor = CrawlerExecutor()
 
 
+@app.get("/")
+async def index() -> dict:
+    return {"ping": "pong"}
+
+
 @app.post("/extract")
-async def extract(item: CrawlerRequest) -> CrawlerResult:
+async def extract(item: CrawlerRequest) -> ResponseData:
     logger.info(f"Received new request : {item.model_dump()}")
+    crawl_start = time.time()
+    if len(item.adapters) == 0:
+        item.adapters.append(CrawlerAdapter.request)
 
-    if item.xhr:
-        return await crawler_executor.crawl_with_adapter(CrawlerAdapter.pyppeteer, item)
+    result: CrawlerResult = await crawler_executor.crawl_page(item)
 
-    request_result = await crawler_executor.crawl_with_adapter(CrawlerAdapter.request, item)
-
-    if request_result.success and verify_is_available(title=request_result.title, html=request_result.html):
-        return request_result
-
-    return await crawler_executor.crawl_with_adapter(CrawlerAdapter.playwright, item)
+    return ResponseData(time=round(time.time() - crawl_start, 2), msg="success", data=result)
 
 
 if __name__ == '__main__':
