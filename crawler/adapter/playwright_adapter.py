@@ -51,7 +51,7 @@ class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
         async with semaphore:
             page = await browser_ctx.new_page()
             try:
-                async with async_timeout.timeout(self.timeout):
+                async with async_timeout.timeout(self.timeout / 1000):
                     # 开启请求拦截
                     await page.route("**/*",
                                      lambda route, request: asyncio.create_task(self._intercept(route, request)))
