@@ -1,10 +1,8 @@
-import re
 import time
 from typing import Tuple, List
 
 from parsel import Selector
 
-from crawler.models import CleanNode
 from logger import logger
 
 
@@ -40,25 +38,3 @@ def parse_meta(html: str) -> Tuple[str, List[str], str]:
         description = ""
 
     return title.strip(), keywords, description.strip()
-
-
-style_regex = re.compile(r"<style.*?>.*?</style>", flags=re.DOTALL)
-
-
-def clean_style(html: str) -> str:
-    return style_regex.sub("", html)
-
-
-script_regex = re.compile(r"<script.*?>.*?</script>", flags=re.DOTALL)
-
-
-def clean_script(html: str) -> str:
-    return script_regex.sub("", html)
-
-
-def clean_html(html: str, clean: CleanNode) -> str:
-    if clean.style:
-        html = clean_style(html)
-    if clean.script:
-        html = clean_script(html)
-    return html
