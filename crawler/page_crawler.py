@@ -20,7 +20,7 @@ class CrawlerExecutor:
         for adapter in item.adapters:
             if adapter not in self.adapters:
                 logger.error(f"Crawler adapter {adapter} not found")
-                continue
+                raise ValueError(f"Crawler adapter {adapter} not found")
             tasks.append(self.adapters.get(adapter).crawl(adapter, item))
 
         results: List[CrawlerResult] = list(await asyncio.gather(*tasks))

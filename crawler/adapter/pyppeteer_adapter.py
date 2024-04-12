@@ -32,33 +32,58 @@ class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
                 await browser.close()
             self._context_list.clear()
 
+    async def _create_browser(self, index: int = None):
+        browser = await launch(options={
+            'headless': self.headless,
+            'ignoreHTTPSErrors': True,
+            'dumpio': False,
+            'autoClose': False,
+            "args": [
+                '--no-sandbox',
+                '--disable-gpu',
+                '--disable-setuid-sandbox',
+                '--disable-infobars',
+                '--disable-accelerated-2d-canvas',
+                '--disable-features=TranslateUI',
+                '--disable-popup-blocking',
+                '--disable-accelerated-mjpeg-decode',
+                '--disable-accelerated-video-encode',
+                '--disable-audio-input',
+                '--disable-audio-output',
+                '--disable-canvas-aa',
+                '--disable-web-security',
+                '--disable-dev-shm-usage',
+                '--disable-extensions'
+            ],
+            'ignoreDefaultArgs': ['--enable-automation'],
+            'executablePath': self.executable_path
+        })
+        if index is None:
+            self._context_list.append((browser, Semaphore(self.page_count)))
+        else:
+            browser, _ = self._context_list[index]
+            await browser.close()
+            self._context_list[index] = (browser, Semaphore(self.page_count))
+
     async def initialize(self) -> None:
         if len(self._context_list) == 0:
             for idx in range(self.browser_count):
-                browser = await launch(options={
-                    'headless': self.headless,
-                    'ignoreHTTPSErrors': True,
-                    'dumpio': False,
-                    'autoClose': False,
-                    "args": [
-                        '--no-sandbox',
-                        '--disable-infobars',
-                        '--disable-features=TranslateUI',
-                        '--disable-web-security',
-                        '--disable-popup-blocking'
-                    ],
-                    'ignoreDefaultArgs': ['--enable-automation'],
-                    'executablePath': self.executable_path
-                })
-
-                self._context_list.append((browser, Semaphore(self.page_count)))
+                await self._create_browser()
 
     @async_timeit
     async def _crawler(self, item: CrawlerRequest) -> Tuple[Optional[str], Optional[str]]:
-        browser, semaphore = self._context_list[self._index % self.browser_count]
-        self._index += 1
+        current_idx = self._index % self.browser_count
+        browser, semaphore = self._context_list[current_idx]
+
         async with semaphore:
-            page = await browser.newPage()
+            try:
+                page = await browser.newPage()
+            except ConnectionError as e:
+                logger.error(f"ConnectionError while creating page : {e}")
+                await self._create_browser(current_idx)
+                browser, _ = self._context_list[current_idx]
+                page = await browser.newPage()
+
             try:
                 async with async_timeout.timeout(self.timeout / 1000):
                     await page.evaluateOnNewDocument(
@@ -69,16 +94,10 @@ class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
                     page.on("dialog", lambda x: asyncio.ensure_future(self._close_dialog(x)))
 
                     await page.goto(item.url, timeout=self.timeout, waitUntil="networkidle2")
-
                     return await page.content(), None
-            except asyncio.TimeoutError as e:
-                logger.error(f"Crawl timeout with adapter: {item.url}")
-                return None, "timeout"
-            except Exception as e:
-                logger.error(f"Crawl error with adapter: {e} : {item.url}")
-                return None, str(e)
             finally:
                 await page.close()
+                self._index += 1
 
     @classmethod
     async def _intercept(cls, request: Request):

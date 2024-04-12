@@ -7,7 +7,6 @@ from fake_useragent import UserAgent
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
 from crawler.models import CrawlerRequest
 from crawler.utils import async_timeit
-from logger import logger
 
 
 class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
@@ -50,12 +49,8 @@ class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
 
     @async_timeit
     async def _crawler(self, item: CrawlerRequest) -> Tuple[Optional[str], Optional[str]]:
-        try:
-            async with self.session.get(item.url, headers=await self._create_header(item.url)) as response:
-                if response.status not in [200, 301, 302, 307, 401, 403]:
-                    response.raise_for_status()
-                html = await response.text()
-                return html, None
-        except Exception as e:
-            logger.error(f"Error while crawling {item.url}: {e}")
-            return None, str(e)
+        async with self.session.get(item.url, headers=await self._create_header(item.url)) as response:
+            if response.status not in [200, 301, 302, 307, 401, 403]:
+                response.raise_for_status()
+            html = await response.text()
+            return html, None
