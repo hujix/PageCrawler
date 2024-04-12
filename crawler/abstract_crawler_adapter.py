@@ -8,6 +8,9 @@ from logger import logger
 
 
 class AbstractPageCrawlerAdapter(ABC):
+    """
+    Abstract base class for page crawler adapters.
+    """
 
     def __init__(self):
         pass
@@ -15,27 +18,32 @@ class AbstractPageCrawlerAdapter(ABC):
     @abstractmethod
     async def initialize(self) -> None:
         """
-        初始化
+        initialize the page crawler adapter.
         """
         raise NotImplementedError
 
     @abstractmethod
     async def close(self) -> None:
         """
-        关闭资源
+        close the page crawler adapter's resource.
         """
         raise NotImplementedError
 
     @abstractmethod
     async def _crawler(self, item: CrawlerRequest) -> Tuple[Optional[str], Optional[str]]:
         """
-        爬取网页内容
+        Crawl the given item.
+        :param item: item to crawl
+        :return: html,reason
         """
         raise NotImplementedError
 
     async def crawl(self, adapter: CrawlerAdapter, item: CrawlerRequest) -> CrawlerResult:
         """
-        爬取网页内容
+        Crawl the given item by adapter.
+        :param adapter: adapter to crawl
+        :param item: item to crawl
+        :return: result of crawl
         """
         await self.initialize()
 

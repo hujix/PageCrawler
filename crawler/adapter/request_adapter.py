@@ -10,6 +10,10 @@ from crawler.utils import async_timeit
 
 
 class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
+    """
+    Crawler adapter for requests using aiohttp.
+    """
+
     def __init__(self, timeout: int = 5):
         super().__init__()
         self._base_header = {

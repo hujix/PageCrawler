@@ -5,12 +5,18 @@ from pydantic import BaseModel, ConfigDict
 
 
 class CrawlerAdapter(Enum):
+    """
+    Crawler adapter enum
+    """
     request: str = "request"
     pyppeteer: str = "pyppeteer"
     playwright: str = "playwright"
 
 
 class CrawlerRequest(BaseModel):
+    """
+    Crawler request model
+    """
     model_config = ConfigDict(str_strip_whitespace=True)
 
     url: str
@@ -24,6 +30,9 @@ class CrawlerRequest(BaseModel):
 
 
 class CrawlerResult(BaseModel):
+    """
+    Crawler result model
+    """
     model_config = ConfigDict(str_strip_whitespace=True)
 
     url: str

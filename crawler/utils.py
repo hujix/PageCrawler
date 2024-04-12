@@ -8,7 +8,7 @@ from logger import logger
 
 def async_timeit(func):
     """
-    耗时统计装饰器
+    A decorator that runs the function asynchronously and returns the result.
     """
 
     async def wrapper(*args, **kwargs):
@@ -22,6 +22,9 @@ def async_timeit(func):
 
 
 def parse_meta(html: str) -> Tuple[str, List[str], str]:
+    """
+    Parse meta tags from HTML and extract relevant information.
+    """
     selector: Selector = Selector(text=html)
     title = selector.css("title::text").get()
     if title is None:

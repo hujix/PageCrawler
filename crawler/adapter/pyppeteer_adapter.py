@@ -14,6 +14,10 @@ from logger import logger
 
 
 class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
+    """
+    Crawler adapter for Pyppeteer.
+    """
+
     def __init__(self, browser_count: int = 1, page_count: int = 2, timeout: int = 5,
                  headless: bool = True, executable_path: Optional[str] = None) -> None:
         super().__init__()

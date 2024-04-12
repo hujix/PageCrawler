@@ -8,6 +8,10 @@ from logger import logger
 
 
 class CrawlerExecutor:
+    """
+    Crawler Executor
+    """
+
     def __init__(self, **kwargs):
         self.adapters: Dict["CrawlerAdapter", "AbstractPageCrawlerAdapter"] = {
             CrawlerAdapter.request: RequestCrawlerAdapter(timeout=kwargs.get("request_timeout", 5)),
