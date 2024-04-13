@@ -2,7 +2,7 @@
 
 ## 概述
 
-`PageExtractor`旨在提供高效的页面提取服务。通过输入URL，用户可以获得网页的关键内容。
+`PageExtractor`旨在提供高效的页面提取服务。通过输入URL，可以获得网页的关键内容。
 
 通过使用`aiohttp`、`playwright`、`puppeteer`三种方式进行页面内容的获取。
 
