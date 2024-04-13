@@ -66,7 +66,7 @@ PageExtractor
 │  │  
 │  ├─adapter                        # 具体的爬虫适配器模块
 │  │  │  playwright_adapter.py
-│  │  │  pyppeteer_adapter.py
+│  │  │  puppeteer_adapter.py
 │  │  │  request_adapter.py
 └──└──└─  __init__.py
 ```
