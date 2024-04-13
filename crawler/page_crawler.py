@@ -2,7 +2,7 @@ import asyncio
 from typing import Dict, List
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
-from crawler.adapter import RequestCrawlerAdapter, PlaywrightCrawlerAdapter, PyppeteerCrawlerAdapter
+from crawler.adapter import RequestCrawlerAdapter, PlaywrightCrawlerAdapter, PuppeteerCrawlerAdapter
 from crawler.models import CrawlerRequest, CrawlerResult, CrawlerAdapter
 from logger import logger
 
@@ -16,7 +16,7 @@ class CrawlerExecutor:
         self.adapters: Dict["CrawlerAdapter", "AbstractPageCrawlerAdapter"] = {
             CrawlerAdapter.request: RequestCrawlerAdapter(timeout=kwargs.get("request_timeout", 5)),
             CrawlerAdapter.playwright: PlaywrightCrawlerAdapter(browser_count=1),
-            CrawlerAdapter.pyppeteer: PyppeteerCrawlerAdapter(browser_count=1)
+            CrawlerAdapter.puppeteer: PuppeteerCrawlerAdapter(browser_count=1)
         }
 
     async def crawl_page(self, item: CrawlerRequest) -> CrawlerResult:

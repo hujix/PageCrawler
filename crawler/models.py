@@ -9,7 +9,7 @@ class CrawlerAdapter(Enum):
     Crawler adapter enum
     """
     request: str = "request"
-    pyppeteer: str = "pyppeteer"
+    puppeteer: str = "puppeteer"
     playwright: str = "playwright"
 
 

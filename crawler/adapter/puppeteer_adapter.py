@@ -13,9 +13,9 @@ from crawler.utils import async_timeit
 from logger import logger
 
 
-class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
+class PuppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
     """
-    Crawler adapter for Pyppeteer.
+    Crawler adapter for Puppeteer.
     """
 
     def __init__(self, browser_count: int = 1, page_count: int = 2, timeout: int = 5,
