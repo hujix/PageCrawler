@@ -103,6 +103,6 @@ PageExtractor
 ## 🎉 祝好运~
 
 <div align="center">
- <img src="https://www.emojiall.com/en/header-svg/%F0%9F%8E%89.svg"width="300" alt="🎉">
+ <img src="https://www.emojiall.com/en/header-svg/%F0%9F%8E%89.svg" width="300" alt="🎉">
 </div>
 

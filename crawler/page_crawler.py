@@ -15,8 +15,18 @@ class CrawlerExecutor:
     def __init__(self, **kwargs):
         self.adapters: Dict["CrawlerAdapter", "AbstractPageCrawlerAdapter"] = {
             CrawlerAdapter.request: RequestCrawlerAdapter(timeout=kwargs.get("request_timeout", 5)),
-            CrawlerAdapter.playwright: PlaywrightCrawlerAdapter(browser_count=1),
-            CrawlerAdapter.puppeteer: PuppeteerCrawlerAdapter(browser_count=1)
+            CrawlerAdapter.playwright: PlaywrightCrawlerAdapter(
+                browser_count=kwargs.get("playwright_browser_count", 1),
+                page_count=kwargs.get("playwright_page_count", 1),
+                timeout=kwargs.get("browser_timeout", 5),
+                headless=kwargs.get("headless", False),
+                executable_path=kwargs.get("playwright_executable_path", None)),
+            CrawlerAdapter.puppeteer: PuppeteerCrawlerAdapter(
+                browser_count=kwargs.get("puppeteer_browser_count", 1),
+                page_count=kwargs.get("puppeteer_page_count", 1),
+                timeout=kwargs.get("browser_timeout", 5),
+                headless=kwargs.get("headless", False),
+                executable_path=kwargs.get("puppeteer_executable_path", None)),
         }
 
     async def crawl_page(self, item: CrawlerRequest) -> CrawlerResult:
