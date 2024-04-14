@@ -19,13 +19,13 @@ class CrawlerExecutor:
                 browser_count=kwargs.get("playwright_browser_count", 1),
                 page_count=kwargs.get("playwright_page_count", 1),
                 timeout=kwargs.get("browser_timeout", 5),
-                headless=kwargs.get("headless", False),
+                headless=kwargs.get("headless", True),
                 executable_path=kwargs.get("playwright_executable_path", None)),
             CrawlerAdapter.puppeteer: PuppeteerCrawlerAdapter(
                 browser_count=kwargs.get("puppeteer_browser_count", 1),
                 page_count=kwargs.get("puppeteer_page_count", 1),
                 timeout=kwargs.get("browser_timeout", 5),
-                headless=kwargs.get("headless", False),
+                headless=kwargs.get("headless", True),
                 executable_path=kwargs.get("puppeteer_executable_path", None)),
         }
 
