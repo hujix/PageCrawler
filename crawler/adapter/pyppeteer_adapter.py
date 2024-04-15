@@ -6,6 +6,7 @@ import async_timeout
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 from pyppeteer.network_manager import Request
+from pyppeteer_stealth import stealth
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
 from crawler.models import CrawlerRequest
@@ -13,9 +14,9 @@ from crawler.utils import async_timeit
 from logger import logger
 
 
-class PuppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
+class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
     """
-    Crawler adapter for Puppeteer.
+    Crawler adapter for Pyppeteer.
     """
 
     def __init__(self, browser_count: int = 1, page_count: int = 2, timeout: int = 5,
@@ -89,9 +90,8 @@ class PuppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
                 page = await browser.newPage()
 
             try:
+                await stealth(page)
                 async with async_timeout.timeout(self.timeout / 1000):
-                    await page.evaluateOnNewDocument(
-                        '()=>{Object.defineProperties(navigator,{webdriver:{get:()=>false}});')
                     # 开启请求拦截
                     await page.setRequestInterception(True)
                     page.on('request', lambda req: asyncio.ensure_future(self._intercept(req)))
@@ -109,7 +109,7 @@ class PuppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
         resource_type = request.resourceType
 
         # 允许加载页面和 JavaScript
-        if resource_type in ['document', 'script', 'xhr']:
+        if resource_type in ['document', 'script', 'xhr', 'fetch']:
             await request.continue_()
         else:
             # 其他资源类型，如图片、样式表、字体等，中止请求

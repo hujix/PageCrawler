@@ -4,6 +4,7 @@ from typing import Optional, List, Tuple
 
 import async_timeout
 from playwright.async_api import async_playwright, Request, Route, Browser, BrowserContext, Playwright
+from playwright_stealth import stealth_async
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
 from crawler.models import CrawlerRequest
@@ -72,6 +73,7 @@ class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
                 page = await browser_ctx.new_page()
 
             try:
+                await stealth_async(page)
                 async with async_timeout.timeout(self.timeout / 1000):
                     # 开启请求拦截
                     await page.route("**/*",
@@ -87,7 +89,7 @@ class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
         # 获取请求的资源类型
         resource_type = request.resource_type
         # 允许加载页面和 JavaScript
-        if resource_type in ['document', 'script', 'xhr']:
+        if resource_type in ['document', 'script', 'xhr', 'fetch']:
             await route.continue_()
         else:
             await route.abort()

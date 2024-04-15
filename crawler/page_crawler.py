@@ -2,7 +2,7 @@ import asyncio
 from typing import Dict, List
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
-from crawler.adapter import RequestCrawlerAdapter, PlaywrightCrawlerAdapter, PuppeteerCrawlerAdapter
+from crawler.adapter import RequestCrawlerAdapter, PlaywrightCrawlerAdapter, PyppeteerCrawlerAdapter
 from crawler.models import CrawlerRequest, CrawlerResult, CrawlerAdapter
 from logger import logger
 
@@ -14,19 +14,19 @@ class CrawlerExecutor:
 
     def __init__(self, **kwargs):
         self.adapters: Dict["CrawlerAdapter", "AbstractPageCrawlerAdapter"] = {
-            CrawlerAdapter.request: RequestCrawlerAdapter(timeout=kwargs.get("request_timeout", 5)),
-            CrawlerAdapter.playwright: PlaywrightCrawlerAdapter(
+            CrawlerAdapter.REQUEST: RequestCrawlerAdapter(timeout=kwargs.get("request_timeout", 5)),
+            CrawlerAdapter.PLAYWRIGHT: PlaywrightCrawlerAdapter(
                 browser_count=kwargs.get("playwright_browser_count", 1),
                 page_count=kwargs.get("playwright_page_count", 1),
                 timeout=kwargs.get("browser_timeout", 5),
                 headless=kwargs.get("headless", True),
                 executable_path=kwargs.get("playwright_executable_path", None)),
-            CrawlerAdapter.puppeteer: PuppeteerCrawlerAdapter(
-                browser_count=kwargs.get("puppeteer_browser_count", 1),
-                page_count=kwargs.get("puppeteer_page_count", 1),
+            CrawlerAdapter.PYPPETEER: PyppeteerCrawlerAdapter(
+                browser_count=kwargs.get("pyppeteer_browser_count", 1),
+                page_count=kwargs.get("pyppeteer_page_count", 1),
                 timeout=kwargs.get("browser_timeout", 5),
                 headless=kwargs.get("headless", True),
-                executable_path=kwargs.get("puppeteer_executable_path", None)),
+                executable_path=kwargs.get("pyppeteer_executable_path", None)),
         }
 
     async def crawl_page(self, item: CrawlerRequest) -> CrawlerResult:

@@ -4,7 +4,7 @@
 
 `PageExtractor`旨在提供高效的页面提取服务。通过输入URL，可以获得网页的关键内容。
 
-通过使用`aiohttp`、`playwright`、`puppeteer`三种方式进行页面内容的获取。
+通过使用`aiohttp`、`playwright`、`pyppeteer`三种方式进行页面内容的获取。
 
 ## 安装运行
 
@@ -43,7 +43,7 @@ curl --location 'http://localhost:8899/extract' \
 
 参数`adapters`默认为`['request']`，即使用`aiohttp`进行直接的请求。 当传入多个`adapter`时，或选择一个内容最长的结果进行返回。
 
-`adapter`的可选参数为：`request`、`playwright`、`puppeteer`。
+`adapter`的可选参数为：`request`、`playwright`、`pyppeteer`。
 
 ## 项目结构
 
@@ -66,7 +66,7 @@ PageExtractor
 │  │  
 │  ├─adapter                        # 具体的爬虫适配器模块
 │  │  │  playwright_adapter.py
-│  │  │  puppeteer_adapter.py
+│  │  │  pyppeteer_adapter.py
 │  │  │  request_adapter.py
 └──└──└─  __init__.py
 ```
@@ -83,10 +83,10 @@ PageExtractor
 
 ### Q: 为什么选择两种浏览器渲染框架？
 
-在一些常用网页的渲染下，`playwright`的平均速度明显比`puppeteer`的速度要好的多，但是有一个问题就是，在网络层面，`playwright`
-没有`puppeteer`对页面渲染返回控制的粒度细：
+在一些常用网页的渲染下，`playwright`的平均速度明显比`pyppeteer`的速度要好的多，但是有一个问题就是，在网络层面，`playwright`
+没有`pyppeteer`对页面渲染返回控制的粒度细：
 
-| 粒度               | 描述                       | playwright | puppeteer |
+| 粒度               | 描述                       | playwright | pyppeteer |
 |------------------|--------------------------|:----------:|:---------:|
 | commit           | 在收到网络响应并开始加载文档时。         |     ✅      |     ❌     |
 | domcontentloaded | 触发“DOMContentLoaded”事件时。 |     ✅      |     ✅     |
@@ -98,7 +98,7 @@ PageExtractor
 在页面渲染时`playwright`能够获取绝大部分的页面内容，但是获取不到页面需要发送如`http`
 请求的网站，所以会导致，获取到的只是一个空内容的`html`的结构。
 
-这个时候就可以使用`puppeteer`来进行渲染，使用`networkidle2`的控制粒度，可以很好地获取到这类的网站。
+这个时候就可以使用`pyppeteer`来进行渲染，使用`networkidle2`的控制粒度，可以很好地获取到这类的网站。
 
 ## 🎉 祝好运~
 

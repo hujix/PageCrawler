@@ -1,3 +1,3 @@
 from .playwright_adapter import PlaywrightCrawlerAdapter
-from .puppeteer_adapter import PuppeteerCrawlerAdapter
+from .pyppeteer_adapter import PyppeteerCrawlerAdapter
 from .request_adapter import RequestCrawlerAdapter

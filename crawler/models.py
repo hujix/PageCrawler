@@ -8,9 +8,9 @@ class CrawlerAdapter(Enum):
     """
     Crawler adapter enum
     """
-    request: str = "request"
-    puppeteer: str = "puppeteer"
-    playwright: str = "playwright"
+    REQUEST: str = "request"
+    PYPPETEER: str = "pyppeteer"
+    PLAYWRIGHT: str = "playwright"
 
 
 class CrawlerRequest(BaseModel):
@@ -20,12 +20,12 @@ class CrawlerRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     url: str
-    adapters: List[CrawlerAdapter] = [CrawlerAdapter.request]
+    adapters: List[CrawlerAdapter] = [CrawlerAdapter.REQUEST]
 
     def __init__(self, **data):
         adapters = data.get('adapters', [])
         if len(adapters) == 0:
-            data['adapters'] = [CrawlerAdapter.request]
+            data['adapters'] = [CrawlerAdapter.REQUEST]
         super().__init__(**data)
 
 
