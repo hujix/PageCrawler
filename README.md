@@ -68,7 +68,7 @@ PageExtractor
 │  │  │  playwright_adapter.py
 │  │  │  pyppeteer_adapter.py
 │  │  │  request_adapter.py
-└──└──└─  __init__.py
+└──└──└─ __init__.py
 ```
 
 ## 关于二创
