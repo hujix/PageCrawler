@@ -1,8 +1,12 @@
-# PageExtractor: 页面提取服务
+# PageCrawler
+
+<div align="center">
+    <a href="README.md">简体中文</a> | <a href="README.en.md">English</a>
+</div>
 
 ## 概述
 
-`PageExtractor`旨在提供高效的页面提取服务。通过输入URL，可以获得网页的关键内容。
+`PageCrawler`旨在提供高效的页面提取服务。通过输入URL，可以获得网页的关键内容。
 
 通过使用`aiohttp`、`playwright`、`pyppeteer`三种方式进行页面内容的获取。
 
@@ -34,7 +38,7 @@ uvicorn main:app --host 0.0.0.0 --port 8899
 curl --location 'http://localhost:8899/extract' \
 --header 'Content-Type: application/json' \
 --data '{
-    "url": "https://wap.peopleapp.com/article/7318277/7155177",
+    "url": "https://www.baidu.com",
     "adapters": [
         "playwright"
     ]
@@ -48,13 +52,14 @@ curl --location 'http://localhost:8899/extract' \
 ## 项目结构
 
 ```text
-PageExtractor
+PageCrawler
 │  .gitignore
 │  LICENSE
 │  logger.py
 │  main.py
 │  models.py
 │  README.md
+│  README.en.md
 │  requirements.txt
 │          
 ├─crawler                           # 爬虫模块
