@@ -1,7 +1,7 @@
 # PageCrawler
 
 <div align="center">
-    <a href="README.md">¼òÌåÖÐÎÄ</a> | <a href="README.en.md">English</a>
+    <a href="README.md">ç®€ä½“ä¸­æ–‡</a> | <a href="README.en.md">English</a>
 </div>
 
 ## Overview
@@ -55,27 +55,27 @@ The available adapter parameters are: `request`, `playwright`, `pyppeteer`.
 
 ```text
 PageCrawler
-©¦  .gitignore
-©¦  LICENSE
-©¦  logger.py
-©¦  main.py
-©¦  models.py
-©¦  README.md
-©¦  README.en.md
-©¦  requirements.txt
-©¦          
-©À©¤crawler                           # Crawler module
-©¦  ©¦  abstract_crawler_adapter.py   # Crawler adapter abstract module 
-©¦  ©¦  models.py
-©¦  ©¦  page_crawler.py               # Crawler adapter initialization and orchestration call
-©¦  ©¦  utils.py
-©¦  ©¦  __init__.py
-©¦  ©¦  
-©¦  ©À©¤adapter                        # Specific crawler adapter module
-©¦  ©¦  ©¦  playwright_adapter.py
-©¦  ©¦  ©¦  pyppeteer_adapter.py
-©¦  ©¦  ©¦  request_adapter.py
-©¸©¤©¤©¸©¤©¤©¸©¤ __init__.py
+â”‚  .gitignore
+â”‚  LICENSE
+â”‚  logger.py
+â”‚  main.py
+â”‚  models.py
+â”‚  README.md
+â”‚  README.en.md
+â”‚  requirements.txt
+â”‚          
+â”œâ”€crawler                           # Crawler module
+â”‚  â”‚  abstract_crawler_adapter.py   # Crawler adapter abstract module 
+â”‚  â”‚  models.py
+â”‚  â”‚  page_crawler.py               # Crawler adapter initialization and orchestration call
+â”‚  â”‚  utils.py
+â”‚  â”‚  __init__.py
+â”‚  â”‚  
+â”‚  â”œâ”€adapter                        # Specific crawler adapter module
+â”‚  â”‚  â”‚  playwright_adapter.py
+â”‚  â”‚  â”‚  pyppeteer_adapter.py
+â”‚  â”‚  â”‚  request_adapter.py
+â””â”€â”€â””â”€â”€â””â”€ __init__.py
 ```
 
 ## About Second Creation
@@ -111,9 +111,9 @@ content from pages that require sending `http` requests, resulting in an empty `
 In such cases, `pyppeteer` can be employed for rendering. With the `networkidle2` control granularity, it can
 effectively capture these types of websites.
 
-## ? Good Luck~
+## ðŸŽ‰ Good Luck~
 
 <div align="center">
- <img src="https://www.emojiall.com/en/header-svg/%F0%9F%8E%89.svg" width="300" alt="?">
+ <img src="https://www.emojiall.com/en/header-svg/%F0%9F%8E%89.svg" width="300" alt="ðŸŽ‰">
 </div>
 
