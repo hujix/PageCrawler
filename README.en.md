@@ -98,12 +98,12 @@ control over page rendering return as `pyppeteer` does:
 
 | Granularity      | Description                                                                      | playwright | pyppeteer |
 |------------------|----------------------------------------------------------------------------------|:----------:|:---------:|
-| commit           | When a network response is received and the document begins to load.             |     ?      |     ?     |
-| domcontentloaded | When the "DOMContentLoaded" event is fired.                                      |     ?      |     ?     |
-| load             | When the "load" event is fired.                                                  |     ?      |     ?     |
-| networkidle      | When there has been no network activity for at least 500 milliseconds.           |     ?      |     ?     |
-| networkidle0     | When there are fewer than 0 network connections for at least 500 milliseconds.   |     ?      |     ?     |
-| networkidle2     | When there are no more than 2 network connections for at least 500 milliseconds. |     ?      |     ?     |
+| commit           | When a network response is received and the document begins to load.             |     ✅      |     ❌     |
+| domcontentloaded | When the "DOMContentLoaded" event is fired.                                      |     ✅      |     ✅     |
+| load             | When the "load" event is fired.                                                  |     ✅      |     ✅     |
+| networkidle      | When there has been no network activity for at least 500 milliseconds.           |     ✅      |     ❌     |
+| networkidle0     | When there are fewer than 0 network connections for at least 500 milliseconds.   |     ❌      |     ✅     |
+| networkidle2     | When there are no more than 2 network connections for at least 500 milliseconds. |     ❌      |     ✅     |
 
 While rendering pages, `playwright` can capture the majority of the page content. However, it may fail to retrieve
 content from pages that require sending `http` requests, resulting in an empty `html` structure.
