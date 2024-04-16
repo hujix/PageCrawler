@@ -5,7 +5,6 @@ from aiohttp import ClientSession
 from fake_useragent import UserAgent
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
-from crawler.models import CrawlerRequest
 from crawler.utils import async_timeit
 
 
@@ -52,9 +51,9 @@ class RequestCrawlerAdapter(AbstractPageCrawlerAdapter):
         return current_header
 
     @async_timeit
-    async def _crawler(self, item: CrawlerRequest) -> Tuple[Optional[str], Optional[str]]:
-        async with self.session.get(item.url, headers=await self._create_header(item.url)) as response:
+    async def _crawler(self, url: str) -> Tuple[str, Optional[str], Optional[str]]:
+        async with self.session.get(url, headers=await self._create_header(url)) as response:
             if response.status not in [200, 301, 302, 307, 401, 403]:
                 response.raise_for_status()
             html = await response.text()
-            return html, None
+            return url, html, None

@@ -9,7 +9,6 @@ from pyppeteer.network_manager import Request
 from pyppeteer_stealth import stealth
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
-from crawler.models import CrawlerRequest
 from crawler.utils import async_timeit
 from logger import logger
 
@@ -76,7 +75,7 @@ class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
                 await self._create_browser()
 
     @async_timeit
-    async def _crawler(self, item: CrawlerRequest) -> Tuple[Optional[str], Optional[str]]:
+    async def _crawler(self, url: str) -> Tuple[str, Optional[str], Optional[str]]:
         current_idx = self._index % self.browser_count
         browser, semaphore = self._context_list[current_idx]
 
@@ -92,27 +91,29 @@ class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
             try:
                 await stealth(page)
                 async with async_timeout.timeout(self.timeout / 1000):
-                    # 开启请求拦截
+                    # enable intercept
                     await page.setRequestInterception(True)
                     page.on('request', lambda req: asyncio.ensure_future(self._intercept(req)))
                     page.on("dialog", lambda x: asyncio.ensure_future(self._close_dialog(x)))
 
-                    await page.goto(item.url, timeout=self.timeout, waitUntil="networkidle2")
-                    return await page.content(), None
+                    await page.goto(url, timeout=self.timeout, waitUntil="networkidle2")
+                    return url, await page.content(), None
+            except asyncio.TimeoutError as e:
+                logger.error(f"Crawl timeout with adapter [pyppeteer] : {url}")
+                return url, None, "timeout"
+            except Exception as e:
+                logger.error(f"Crawl error with adapter [pyppeteer] : {e} : {url}")
+                return url, None, str()
             finally:
                 await page.close()
                 self._index += 1
 
     @classmethod
     async def _intercept(cls, request: Request):
-        # 获取请求的资源类型
         resource_type = request.resourceType
-
-        # 允许加载页面和 JavaScript
         if resource_type in ['document', 'script', 'xhr', 'fetch']:
             await request.continue_()
         else:
-            # 其他资源类型，如图片、样式表、字体等，中止请求
             await request.abort()
 
     @classmethod

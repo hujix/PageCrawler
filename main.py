@@ -1,4 +1,5 @@
 import time
+from typing import List
 
 from fastapi import FastAPI
 
@@ -24,10 +25,5 @@ async def index() -> dict:
 async def extract(item: CrawlerRequest) -> ResponseData:
     logger.info(f"Received new request : {item.model_dump()}")
     crawl_start = time.time()
-    try:
-        result: CrawlerResult = await crawler_executor.crawl_page(item)
-        return ResponseData(time=round(time.time() - crawl_start, 2), msg="success", data=result)
-    except Exception as e:
-        logger.error("Exception occurred", exc_info=e)
-        return ResponseData(time=round(time.time() - crawl_start, 2), msg=f"error:{str(e)}",
-                            data=CrawlerResult(url=item.url))
+    result: List[CrawlerResult] = await crawler_executor.crawl_page(item)
+    return ResponseData(time=round(time.time() - crawl_start, 2), msg="success", data=result)

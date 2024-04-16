@@ -39,7 +39,9 @@ uvicorn main:app --host 0.0.0.0 --port 8899
 curl --location 'http://localhost:8899/extract' \
 --header 'Content-Type: application/json' \
 --data '{
-    "url": "https://wap.peopleapp.com/article/7318277/7155177",
+    "urls": [
+        "https://www.baidu.com"
+    ],
     "adapters": [
         "playwright"
     ]

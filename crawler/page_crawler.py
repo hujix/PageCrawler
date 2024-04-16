@@ -30,14 +30,21 @@ class CrawlerExecutor:
                 executable_path=kwargs.get("pyppeteer_executable_path", None)),
         }
 
-    async def crawl_page(self, item: CrawlerRequest) -> CrawlerResult:
-        tasks = []
+    async def crawl_page(self, item: CrawlerRequest) -> List[CrawlerResult]:
+        crawler_tasks = []
         for adapter in item.adapters:
             if adapter not in self.adapters:
                 logger.error(f"Crawler adapter {adapter} not found")
                 raise ValueError(f"Crawler adapter {adapter} not found")
-            tasks.append(self.adapters.get(adapter).crawl(adapter, item))
+            crawler_tasks.append(self.adapters.get(adapter).crawl(adapter, item.urls))
 
-        results: List[CrawlerResult] = list(await asyncio.gather(*tasks))
+        result_item_list: List[CrawlerResult] = [CrawlerResult(url=url) for url in item.urls]
+        url_dict = {url: idx for idx, url in enumerate(item.urls)}
+        for crawler_task in asyncio.as_completed(crawler_tasks):
+            results = await crawler_task
+            for result in results:
+                result_item = max(result, result_item_list[url_dict[result.url]],
+                                  key=lambda x: len(x.title + x.html + x.reason))
+                result_item_list[url_dict[result.url]] = result_item
 
-        return max(results, key=lambda x: len(x.title + x.html + x.reason))
+        return result_item_list

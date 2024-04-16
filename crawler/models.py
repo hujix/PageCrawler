@@ -19,7 +19,7 @@ class CrawlerRequest(BaseModel):
     """
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    url: str
+    urls: List[str]
     adapters: List[CrawlerAdapter] = [CrawlerAdapter.REQUEST]
 
     def __init__(self, **data):
