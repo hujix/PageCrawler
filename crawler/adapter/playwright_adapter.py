@@ -60,6 +60,7 @@ class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
     @async_timeit
     async def _crawler(self, url: str) -> Tuple[str, Optional[str], Optional[str]]:
         current_idx = self._index % self.browser_count
+        self._index += 1
         browser, browser_ctx, semaphore = self._context_list[current_idx]
 
         async with semaphore:
@@ -87,7 +88,6 @@ class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
                 return url, None, str()
             finally:
                 await page.close()
-                self._index += 1
 
     @classmethod
     async def _intercept(cls, route: Route, request: Request):
