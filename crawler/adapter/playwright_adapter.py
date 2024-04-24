@@ -4,7 +4,6 @@ from typing import Optional, List, Tuple
 
 import async_timeout
 from playwright.async_api import async_playwright, Request, Route, Browser, BrowserContext, Playwright
-from playwright_stealth import stealth_async
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
 from crawler.utils import async_timeit
@@ -73,7 +72,6 @@ class PlaywrightCrawlerAdapter(AbstractPageCrawlerAdapter):
                 page = await browser_ctx.new_page()
 
             try:
-                await stealth_async(page)
                 async with async_timeout.timeout(self.timeout / 1000):
                     # enable intercept
                     await page.route("**/*",

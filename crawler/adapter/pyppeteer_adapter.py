@@ -6,7 +6,6 @@ import async_timeout
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 from pyppeteer.network_manager import Request
-from pyppeteer_stealth import stealth
 
 from crawler.abstract_crawler_adapter import AbstractPageCrawlerAdapter
 from crawler.utils import async_timeit
@@ -90,7 +89,6 @@ class PyppeteerCrawlerAdapter(AbstractPageCrawlerAdapter):
                 page = await browser.newPage()
 
             try:
-                await stealth(page)
                 async with async_timeout.timeout(self.timeout / 1000):
                     # enable intercept
                     await page.setRequestInterception(True)
