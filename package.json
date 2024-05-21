@@ -11,8 +11,7 @@
   "main": "index.ts",
   "scripts": {
     "install:playwright": "pnpm exec playwright install chromium",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "eslint . --fix"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
