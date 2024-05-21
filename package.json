@@ -1,0 +1,36 @@
+{
+  "name": "page-crawler",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Hu.Sir",
+  "license": "MIT",
+  "keywords": [
+    "crawler",
+    "web"
+  ],
+  "main": "index.ts",
+  "scripts": {
+    "install:playwright": "pnpm exec playwright install chromium",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "axios": "^1.6.8",
+    "iconv-lite": "^0.6.3",
+    "jsdom": "^24.0.0",
+    "p-limit": "^5.0.0",
+    "playwright": "^1.44.0",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.18.1",
+    "@types/jsdom": "^21.1.6",
+    "@types/mozilla-readability": "^0.2.1",
+    "@types/node": "^20.12.11",
+    "eslint": "9.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.10.0"
+  }
+}

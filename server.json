@@ -1,0 +1,18 @@
+{
+  "apps": [
+    {
+      "name": "crawler",
+      "script": "./dist/index.js",
+      "error_file": "./logs/out.log",
+      "out_file": "./logs/out.log",
+      "log_date_format": "YYYY:MM:DD HH:mm:ss",
+      "args": [],
+      "cron_restart": "30 1 * * *",
+      "exec_mode": "fork",
+      "instances": "max",
+      "exp_backoff_restart_delay": 100,
+      "max_memory_restart": "200M",
+      "autorestart": true
+    }
+  ]
+}
