@@ -1,5 +1,9 @@
 # PageCrawler
 
+<div align="center" style="color: red">
+当前分支（Python3）已不再更新，修改nodejs版本
+</div>
+
 <div align="center">
     <a href="README.md">简体中文</a> | <a href="README.en.md">English</a>
 </div>
