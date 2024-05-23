@@ -5,12 +5,17 @@ interface CrawlerOptions {
 
 export interface RequestOptions extends CrawlerOptions {
   headers?: Record<string, string>;
-  followRedirect?: boolean;
 }
 
 export interface PlaywrightOptions extends CrawlerOptions {
   headless: boolean;
   instance: number;
+}
+
+export interface CrawlerParams {
+  urls: string[];
+  img?: boolean;
+  link?: boolean;
 }
 
 export interface CrawlerResult {
